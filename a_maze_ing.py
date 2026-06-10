@@ -85,15 +85,20 @@ def main() -> None:
 
     width = config["WIDTH"]
     height = config["HEIGHT"]
+    seed = config.get("SEED")
 
     if not isinstance(width, int) or not isinstance(height, int):
         return
 
-    maze = MazeGenerator(width, height)
+    if seed is not None and not isinstance(seed, int):
+        print("Error: SEED must be an integer")
+        return
 
-    print(f"Grid created: {maze.width}x{maze.height}")
-    print(f"Rows: {len(maze.grid)}")
-    print(f"Cells in first row: {len(maze.grid[0])}")
+    maze = MazeGenerator(width, height, seed)
+    maze.generate_maze()
+
+    print(f"Maze generated: {maze.width}x{maze.height}")
+    print(f"Seed: {maze.seed}")
 
 
 if __name__ == "__main__":
