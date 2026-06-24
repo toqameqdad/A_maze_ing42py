@@ -68,7 +68,7 @@ def main() -> None:
             if not line or line.startswith("#"):
                 continue
 
-            key, value = line.split("=")
+            key, value = line.split("=", 1)
 
             if key in ("WIDTH", "HEIGHT", "SEED"):
                 config[key] = int(value)
@@ -76,7 +76,10 @@ def main() -> None:
                 x, y = value.split(",")
                 config[key] = (int(x), int(y))
             elif key == "PERFECT":
-                config[key] = value.lower() == "true"
+                val_clean = value.lower()
+                if val_clean not in ("true", "false"):
+                    raise ValueError
+                config[key] = val_clean == "true"
             else:
                 config[key] = value
 
