@@ -9,7 +9,10 @@ class Maze:
         self._seed = seed
         self.wall_color = "47"
         self.pattern_color = "42"
-        random.seed(self._seed)
+        if self._seed == None:
+            random.seed()
+        else:
+            random.seed(self._seed)
         self._grid = []
         for row in range(self._height):
             current_row = []
@@ -86,6 +89,7 @@ class Maze:
             for row in range(self._height):
                 for colomn in range(self._width):
                     if random.random() <= 0.2 and (colomn + 1) < self._width:
+                        ####### we need edit here to make the maze 42 and not to break it 
                         if (
                                 (self._grid[row][colomn] & 2) != 0
                                 and (self._grid[row][colomn + 1] & 8) != 0):

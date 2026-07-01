@@ -89,10 +89,10 @@ def main() -> None:
                 print(f"Error: Duplicate key found: '{key}'")
                 return
             try:
+                key = key.upper()
                 if key in ("WIDTH", "HEIGHT"):
                     config[key] = int(value)
-                elif key in ("seed", "SEED"):
-                    key = key.upper()
+                elif key in ("SEED"):
                     config[key] = int(value)
                 elif key in ("ENTRY", "EXIT"):
                     x_str, y_str = value.split(",")
@@ -124,7 +124,8 @@ def main() -> None:
               "4. Quit\n")
         choice = input("Choice? (1-4): ")
         if choice == "1":
-            pass
+            seed.generate_maze(4,4)
+            seed.print_maze()
         elif choice == "2":
             pass
         elif choice == "3":
