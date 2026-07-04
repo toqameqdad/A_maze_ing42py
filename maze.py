@@ -8,8 +8,7 @@ class Maze:
         self._perfect = perfect
         self._seed = seed
         self.wall_color = "47"
-        self.pattern_color = "42"
-        if self._seed == None:
+        if self._seed is None:
             random.seed()
         else:
             random.seed(self._seed)
@@ -26,7 +25,7 @@ class Maze:
             for colomn in range(self._width):
                 current_row.append(False)
             self._visited.append(current_row)
-        pattern = [
+            pattern = [
             [1, 0, 0, 0, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 1],
             [1, 1, 1, 0, 1, 1, 1],
@@ -61,7 +60,9 @@ class Maze:
             neighbors.append((next_x, y, "E"))
         return neighbors
 
-    def generate_maze(self, start_x: int, start_y: int) -> None:
+    def generate_maze(self) -> None:
+        start_x = 0
+        start_y = 0
         self._visited[start_y][start_x] = True
         stack = [(start_x, start_y)]
         while stack:
@@ -89,10 +90,11 @@ class Maze:
             for row in range(self._height):
                 for colomn in range(self._width):
                     if random.random() <= 0.2 and (colomn + 1) < self._width:
-                        ####### we need edit here to make the maze 42 and not to break it 
                         if (
                                 (self._grid[row][colomn] & 2) != 0
-                                and (self._grid[row][colomn + 1] & 8) != 0):
+                                and (self._grid[row][colomn + 1] & 8) != 0
+                                and self._grid[row][colomn + 1] != 15
+                                and self._grid[row][colomn] != 15):
                             self._grid[row][colomn] -= 2
                             self._grid[row][colomn + 1] -= 8
                             if self._is_3x3(row, colomn):
