@@ -1,4 +1,5 @@
 import random
+from collections import deque
 
 
 class Maze:
@@ -9,6 +10,7 @@ class Maze:
         self._seed = seed
         self.wall_color = "47"
         self.pattern_color = "42"
+        self._show_path = False
         if self._seed == None:
             random.seed()
         else:
@@ -33,6 +35,7 @@ class Maze:
             [0, 0, 1, 0, 1, 0, 0],
             [0, 0, 1, 0, 1, 1, 1]
         ]
+        self._pattern_cells = set()
         if self._width > 7 and self._height > 5:
             start_x = (self._width - 7) // 2
             start_y = (self._height - 5) // 2
@@ -43,6 +46,7 @@ class Maze:
                         maze_y = start_y + r
                         self._grid[maze_y][maze_x] = 15
                         self._visited[maze_y][maze_x] = True
+                        self._pattern_cells.add((maze_x, maze_y))
 
     def _get_unvisited_neighbors(self, x: int, y: int) -> list[
             tuple[int, int, str]]:
@@ -121,23 +125,113 @@ class Maze:
 
     def print_maze(self):
         WALL = f"\033[{self.wall_color}m \033[0m"
-        PATH = "  "
-        print(WALL * ((self._width * 3) + 1))
+        PATTERN = f"\033[{self.pattern_color}m \033[0m"
+
+    # السقف
+        top = WALL
+        for _ in range(self._width):
+            top += WALL * 3 + WALL
+        print(top)
+
         for r in range(self._height):
-            row_str = WALL
-            col_str = WALL
+
+            middle = WALL
+            bottom = WALL
+
             for c in range(self._width):
-                row_str += PATH
 
-                if self._grid[r][c] & 2 != 0:
-                    row_str += WALL
+                wall_char = PATTERN if (c, r) in self._pattern_cells else WALL
+
+            # محتوى الخلية
+                if hasattr(self, "_entry") and (c, r) == self._entry:
+                    cell = " E "
+                elif hasattr(self, "_exit") and (c, r) == self._exit:
+                    cell = " X "
+                elif hasattr(self, "_path") and (c, r) in self._path:
+                    cell = " * "
+                elif (
+                    hasattr(self, "_path")
+                    and self._show_path
+                    and (c, r) in self._path
+                ):
+                    cell = " * "
                 else:
-                    row_str += " "
+                    cell = "   "
 
-                if self._grid[r][c] & 4 != 0:
-                    col_str += WALL * 3
+                middle += cell
+
+            # الجدار الشرقي
+                if self._grid[r][c] & 2:
+                    middle += wall_char
                 else:
-                    col_str += PATH + WALL
+                    middle += " "
 
-            print(row_str)
-            print(col_str)
+            # الجدار الجنوبي
+                if self._grid[r][c] & 4:
+                    bottom += wall_char * 3
+                else:
+                    bottom += "   "
+
+            # الفاصل بين الخلايا
+                bottom += wall_char
+
+            print(middle)
+            print(bottom)
+
+    def solve_path(self, entry: tuple[int, int], exit: tuple[int, int]) -> list[tuple[int, int]]:
+        self._entry = entry
+        self._exit = exit
+        queue = deque([entry])
+        visited = set([entry])
+        parent = {entry: None}
+
+        directions = [
+            (0, -1, 1), #N
+            (0, 1, 4), #S
+            (-1, 0, 8), #W
+            (1, 0, 2) #E
+        ]
+
+        while queue:
+            x, y = queue.popleft()
+
+            if (x, y) == exit:
+                break
+
+            cell = self._grid[y][x]
+
+            for dx, dy, wall in directions:
+                # Check if there is no wall in that direction
+                if cell & wall != 0:
+                    continue
+
+                nx, ny = x + dx, y + dy
+
+                #حدود المتاهة
+                if nx < 0 or nx >= self._width or ny < 0 or ny >= self._height:
+                    continue
+
+                if (nx, ny) in visited:
+                    continue
+
+                visited.add((nx, ny))
+                parent[(nx, ny)] = (x, y)
+                queue.append((nx, ny))
+
+            # اذا ما وصلنا لل exit
+        if exit not in parent:
+            self._path = []
+            return []
+
+        # بناء المسار من exit الى entry
+        path = []
+        node = exit
+
+        while node is not None:
+            path.append(node)
+            node = parent[node]
+
+        path.reverse()
+
+        self._path = path
+        return path
