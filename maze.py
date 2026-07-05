@@ -11,6 +11,7 @@ class Maze:
         self.wall_color = "47"
         self.pattern_color = "42"
         self._show_path = False
+        self.path_color = "46"
         if self._seed == None:
             random.seed()
         else:
@@ -28,7 +29,7 @@ class Maze:
             for colomn in range(self._width):
                 current_row.append(False)
             self._visited.append(current_row)
-        pattern = [
+            pattern = [
             [1, 0, 0, 0, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 1],
             [1, 1, 1, 0, 1, 1, 1],
@@ -66,6 +67,24 @@ class Maze:
         return neighbors
 
     def generate_maze(self, start_x: int, start_y: int) -> None:
+        self._grid = []
+        for row in range(self._height):
+            current_row = []
+            for colomn in range(self._width):
+                current_row.append(15)
+            self._grid.append(current_row)
+
+        self._visited = []
+        for row in range(self._height):
+            current_row = []
+            for colomn in range(self._width):
+                current_row.append(False)
+            self._visited.append(current_row)
+
+        for c, r in self._pattern_cells:
+            self._visited[r][c] = True
+            self._grid[r][c] = 15
+            
         self._visited[start_y][start_x] = True
         stack = [(start_x, start_y)]
         while stack:
@@ -93,10 +112,11 @@ class Maze:
             for row in range(self._height):
                 for colomn in range(self._width):
                     if random.random() <= 0.2 and (colomn + 1) < self._width:
-                        ####### we need edit here to make the maze 42 and not to break it 
                         if (
                                 (self._grid[row][colomn] & 2) != 0
-                                and (self._grid[row][colomn + 1] & 8) != 0):
+                                and (self._grid[row][colomn + 1] & 8) != 0
+                                and self._grid[row][colomn + 1] != 15
+                                and self._grid[row][colomn] != 15):
                             self._grid[row][colomn] -= 2
                             self._grid[row][colomn + 1] -= 8
                             if self._is_3x3(row, colomn):
@@ -119,13 +139,17 @@ class Maze:
         return True
 
     def rotate_colors(self):
-        colors = ["47", "41", "42", "43", "44", "45", "46"]
+        colors = ["47", "41", "42", "43", "44", "45", "46", "47", "100", "101", "102", "103", "104", "105", "106"]
         self.wall_color = random.choice(colors)
         self.pattern_color = random.choice(colors)
+        self.path_color = random.choice(colors)
 
     def print_maze(self):
         WALL = f"\033[{self.wall_color}m \033[0m"
         PATTERN = f"\033[{self.pattern_color}m \033[0m"
+        PATH = f"\033[{self.path_color}m   \033[0m"
+        ENTRY = "\033[45m   \033[0m"   # بنفسجي
+        EXIT = "\033[41m   \033[0m"    # أحمر
 
     # السقف
         top = WALL
@@ -140,21 +164,24 @@ class Maze:
 
             for c in range(self._width):
 
-                wall_char = PATTERN if (c, r) in self._pattern_cells else WALL
+                wall_char = WALL
 
             # محتوى الخلية
                 if hasattr(self, "_entry") and (c, r) == self._entry:
-                    cell = " E "
+                    cell = ENTRY
                 elif hasattr(self, "_exit") and (c, r) == self._exit:
-                    cell = " X "
-                elif hasattr(self, "_path") and (c, r) in self._path:
-                    cell = " * "
+                    cell = EXIT
+
                 elif (
                     hasattr(self, "_path")
                     and self._show_path
                     and (c, r) in self._path
                 ):
-                    cell = " * "
+                    cell = PATH
+
+                elif (c, r) in self._pattern_cells:
+                    cell = f"\033[{self.pattern_color}m   \033[0m"
+                
                 else:
                     cell = "   "
 
@@ -164,14 +191,29 @@ class Maze:
                 if self._grid[r][c] & 2:
                     middle += wall_char
                 else:
-                    middle += " "
+                    if (
+                        hasattr(self, "_path")
+                        and self._show_path
+                        and (c, r) in self._path
+                        and (c + 1, r) in self._path
+                    ):
+                        middle += f"\033[{self.path_color}m \033[0m"
+                    else:
+                        middle += " "
 
             # الجدار الجنوبي
                 if self._grid[r][c] & 4:
                     bottom += wall_char * 3
                 else:
-                    bottom += "   "
-
+                    if (
+                        hasattr(self, "_path")
+                        and self._show_path
+                        and (c, r) in self._path
+                        and (c, r + 1) in self._path
+                    ):
+                        bottom += f"\033[{self.path_color}m   \033[0m"
+                    else:
+                        bottom += "   "
             # الفاصل بين الخلايا
                 bottom += wall_char
 

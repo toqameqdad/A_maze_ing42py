@@ -1,18 +1,36 @@
 import sys
-from pathlib import Path
 from typing import TypeAlias
-
-from maze_generator import MazeGenerator
+from pathlib import Path
+from maze import Maze
 
 
 ConfigValue: TypeAlias = int | str | bool | tuple[int, int]
 
 
 def validate_config(config: dict[str, ConfigValue]) -> bool:
+    """Validate the parsed configuration dictionary for the maze.
+
+    Checks if all required keys are present, types are correct, and
+    coordinates are within the logical boundaries of the maze.
+
+    Args:
+        config: A dictionary containing the configuration keys and values.
+
+    Returns:
+        True if the configuration is valid and safe to use, False otherwise.
+    """
+    required_keys = [
+            "WIDTH", "HEIGHT", "ENTRY",
+            "EXIT", "OUTPUT_FILE", "PERFECT"]
+    for key in required_keys:
+        if key not in config:
+            print(f"Error: Missing required configuration key: '{key}'")
+            return False
     width = config["WIDTH"]
     height = config["HEIGHT"]
     entry = config["ENTRY"]
     exit_ = config["EXIT"]
+    output_file = config["OUTPUT_FILE"]
 
     if not isinstance(width, int) or not isinstance(height, int):
         print("Error: WIDTH and HEIGHT must be integers")
@@ -52,56 +70,74 @@ def main() -> None:
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         return
-
     config_path = Path(sys.argv[1])
-
     if not config_path.exists():
-        print(f"Error: file not found: {config_path}")
+        print("config file does not exist!")
         return
-
     config: dict[str, ConfigValue] = {}
-
     with config_path.open("r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
-
             if not line or line.startswith("#"):
                 continue
-
+            if "=" not in line:
+                print(f"Error: Invalid line format: '{line}'")
+                return
             key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip()
+            if key in config:
+                print(f"Error: Duplicate key found: '{key}'")
+                return
+            try:
+                key = key.upper()
+                if key in ("WIDTH", "HEIGHT"):
+                    config[key] = int(value)
+                elif key in ("SEED"):
+                    config[key] = int(value)
+                elif key in ("ENTRY", "EXIT"):
+                    x_str, y_str = value.split(",")
+                    config[key] = (int(x_str), int(y_str))
+                elif key == "PERFECT":
+                    val_clean = value.lower()
+                    if val_clean not in ("true", "false"):
+                        raise ValueError
+                    config[key] = val_clean == "true"
+                else:
+                    config[key] = value
 
-            if key in ("WIDTH", "HEIGHT", "SEED"):
-                config[key] = int(value)
-            elif key in ("ENTRY", "EXIT"):
-                x, y = value.split(",")
-                config[key] = (int(x), int(y))
-            elif key == "PERFECT":
-                val_clean = value.lower()
-                if val_clean not in ("true", "false"):
-                    raise ValueError
-                config[key] = val_clean == "true"
-            else:
-                config[key] = value
-
+            except (ValueError, IndexError):
+                print(f"Error: Invalid value format for "
+                      f"key '{key}' with value '{value}'")
+                return
     if not validate_config(config):
         return
-
-    width = config["WIDTH"]
-    height = config["HEIGHT"]
-    seed = config.get("SEED")
-
-    if not isinstance(width, int) or not isinstance(height, int):
-        return
-
-    if seed is not None and not isinstance(seed, int):
-        print("Error: SEED must be an integer")
-        return
-
-    maze = MazeGenerator(width, height, seed)
-    maze.generate_maze()
-
-    print(f"Maze generated: {maze.width}x{maze.height}")
-    print(f"Seed: {maze.seed}")
+    seed_value = config.get("SEED", None)
+    seed = Maze(config["WIDTH"], config["HEIGHT"],
+                config["PERFECT"], seed_value)
+    seed.generate_maze()
+    seed.print_maze()
+    while True:
+        print("=== A-Maze-ing ===\n"
+              "1. Re-generate a new maze\n"
+              "2. Show/Hide path from entry to exit\n"
+              "3. Rotate maze colors\n"
+              "4. Quit\n")
+        choice = input("Choice? (1-4): ")
+        if choice == "1":
+            seed = Maze(config["WIDTH"], config["HEIGHT"],
+                        config["PERFECT"], seed_value)
+            seed.generate_maze()
+            seed.print_maze()
+        elif choice == "2":
+            pass
+        elif choice == "3":
+            seed.rotate_colors()
+            seed.print_maze()
+        elif choice == "4":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice!")
 
 
 if __name__ == "__main__":

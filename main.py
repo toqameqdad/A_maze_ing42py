@@ -125,6 +125,7 @@ def main() -> None:
         choice = input("Choice? (1-4): ")
         if choice == "1":
             seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
+            seed.solve_path(config["ENTRY"], config["EXIT"])
             seed.print_maze()
         elif choice == "2":
             seed._show_path = not seed._show_path
