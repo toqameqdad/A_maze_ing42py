@@ -3,7 +3,6 @@ from typing import TypeAlias
 from pathlib import Path
 from maze import Maze
 
-
 ConfigValue: TypeAlias = int | str | bool | tuple[int, int]
 
 
@@ -112,9 +111,10 @@ def main() -> None:
     if not validate_config(config):
         return
     seed_value = config.get("SEED", None)
-    seed = Maze(config["WIDTH"], config["HEIGHT"],
-                config["PERFECT"], seed_value)
-    seed.generate_maze()
+    seed = Maze(config["WIDTH"], config["HEIGHT"]
+                , config["PERFECT"], seed_value)
+    seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
+    seed.solve_path(config["ENTRY"], config["EXIT"])
     seed.print_maze()
     while True:
         print("=== A-Maze-ing ===\n"
@@ -124,12 +124,14 @@ def main() -> None:
               "4. Quit\n")
         choice = input("Choice? (1-4): ")
         if choice == "1":
-            seed = Maze(config["WIDTH"], config["HEIGHT"],
-                        config["PERFECT"], seed_value)
-            seed.generate_maze()
+            seed = Maze(config["WIDTH"], config["HEIGHT"]
+                , config["PERFECT"], seed_value)
+            seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
+            seed.solve_path(config["ENTRY"], config["EXIT"])
             seed.print_maze()
         elif choice == "2":
-            pass
+            seed._show_path = not seed._show_path
+            seed.print_maze()
         elif choice == "3":
             seed.rotate_colors()
             seed.print_maze()
@@ -138,6 +140,7 @@ def main() -> None:
             break
         else:
             print("Invalid choice!")
+
 
 
 if __name__ == "__main__":
