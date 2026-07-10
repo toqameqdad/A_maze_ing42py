@@ -61,7 +61,7 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
     if not (0 <= exit_x < width and 0 <= exit_y < height):
         print("Error: EXIT is outside maze bounds")
         return False
-    
+
     return True
 
 
@@ -112,8 +112,8 @@ def main() -> None:
         return
     seed_value = config.get("SEED", None)
     perfect = config.get("PERFECT", "False")
-    seed = Maze(config["WIDTH"], config["HEIGHT"]
-                , perfect, seed_value)
+    seed = Maze(config["WIDTH"], config["HEIGHT"],
+                perfect, seed_value)
     if config["ENTRY"] in seed._pattern_cells:
         print(f"Error: ENTRY {config['ENTRY']} falls on the '42' pattern! "
               "This cell is reserved. Please change it in config.txt.")
@@ -157,7 +157,6 @@ def main() -> None:
                 print("Invalid choice!")
         except (Exception, KeyboardInterrupt):
             sys.exit(0)
-
 
 
 if __name__ == "__main__":

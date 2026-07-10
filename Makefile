@@ -23,8 +23,7 @@ clean:
 
 lint:
 	./$(VENV)/bin/flake8 . --exclude=$(VENV)
-	./$(VENV)/bin/mypy . --exclude=$(VENV) --warn-return-any --warn-unused-ignores
-	--ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	./$(VENV)/bin/mypy . --exclude=$(VENV) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
 	./$(VENV)/bin/flake8 . --exclude=$(VENV)

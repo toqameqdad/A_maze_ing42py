@@ -4,7 +4,13 @@ from collections import deque
 
 
 class Maze:
-    def __init__(self, width: int, height: int, perfect: bool, seed: int):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        perfect: bool,
+        seed: int | None
+    ):
         self._width = width
         self._height = height
         self._perfect = perfect
@@ -13,31 +19,31 @@ class Maze:
         self.pattern_color = "42"
         self._show_path = False
         self.path_color = "46"
-        if self._seed == None:
+        if self._seed is None:
             random.seed()
         else:
             random.seed(self._seed)
-        self._grid = []
+        self._grid: list[list[int]] = []
         for row in range(self._height):
             current_row = []
             for colomn in range(self._width):
                 current_row.append(15)
             self._grid.append(current_row)
 
-        self._visited = []
+        self._visited: list[list[int]] = []
         for row in range(self._height):
             current_row = []
             for colomn in range(self._width):
                 current_row.append(False)
             self._visited.append(current_row)
             pattern = [
-            [1, 0, 0, 0, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 0, 1, 1, 1],
-            [0, 0, 1, 0, 1, 0, 0],
-            [0, 0, 1, 0, 1, 1, 1]
-        ]
-        self._pattern_cells = set()
+                [1, 0, 0, 0, 1, 1, 1],
+                [1, 0, 0, 0, 0, 0, 1],
+                [1, 1, 1, 0, 1, 1, 1],
+                [0, 0, 1, 0, 1, 0, 0],
+                [0, 0, 1, 0, 1, 1, 1]
+            ]
+        self._pattern_cells: set[tuple[int, int]] = set()
         if self._width > 7 and self._height > 5:
             start_x = (self._width - 7) // 2
             start_y = (self._height - 5) // 2
@@ -85,7 +91,7 @@ class Maze:
         for c, r in self._pattern_cells:
             self._visited[r][c] = True
             self._grid[r][c] = 15
-            
+
         self._visited[start_y][start_x] = True
         stack = [(start_x, start_y)]
         while stack:
@@ -139,18 +145,21 @@ class Maze:
                     return False
         return True
 
-    def rotate_colors(self):
-        colors = ["47", "41", "42", "43", "44", "45", "46", "47", "100", "101", "102", "103", "104", "105", "106"]
+    def rotate_colors(self) -> None:
+        colors = [
+            "47", "41", "42", "43", "44", "45", "46",
+            "47", "100", "101", "102", "103", "104", "105", "106"
+            ]
         self.wall_color = random.choice(colors)
         self.pattern_color = random.choice(colors)
         self.path_color = random.choice(colors)
 
-    def print_maze(self):
+    def print_maze(self) -> None:
         WALL = f"\033[{self.wall_color}m \033[0m"
-        PATTERN = f"\033[{self.pattern_color}m \033[0m"
+        PATTERN = f"\033[{self.pattern_color}m   \033[0m"
         PATH = f"\033[{self.path_color}m   \033[0m"
-        ENTRY = "\033[45m   \033[0m"   # بنفسجي
-        EXIT = "\033[41m   \033[0m"    # أحمر
+        ENTRY = "\033[45m   \033[0m"  # بنفسجي
+        EXIT = "\033[41m   \033[0m"   # أحمر
 
     # السقف
         top = WALL
@@ -181,8 +190,8 @@ class Maze:
                     cell = PATH
 
                 elif (c, r) in self._pattern_cells:
-                    cell = f"\033[{self.pattern_color}m   \033[0m"
-                
+                    cell = PATTERN
+
                 else:
                     cell = "   "
 
@@ -216,24 +225,42 @@ class Maze:
                     else:
                         bottom += "   "
             # الفاصل بين الخلايا
-               # bottom += wall_char
-               # الفاصل بين الخلايا (الزاوية المشتركة)
-                # تكون جداراً فقط إذا كان هناك جدار واحد على الأقل متصل بها
+            # bottom += wall_char
+            # الفاصل بين الخلايا (الزاوية المشتركة)
+            # تكون جداراً فقط إذا كان هناك جدار واحد على الأقل متصل بها
                 has_east = (self._grid[r][c] & 2) != 0
                 has_south = (self._grid[r][c] & 4) != 0
-                has_next_south = (self._grid[r][c + 1] & 4) != 0 if (c + 1 < self._width) else True
-                has_down_east = (self._grid[r + 1][c] & 2) != 0 if (r + 1 < self._height) else True
+                has_next_south = (
+                    (self._grid[r][c + 1] & 4) != 0
+                    if (c + 1 < self._width)
+                    else True
+                )
+                has_down_east = (
+                    (self._grid[r + 1][c] & 2) != 0
+                    if (r + 1 < self._height)
+                    else True
+                )
 
-                if has_east or has_south or has_next_south or has_down_east:
+                if (
+                    has_east
+                    or has_south
+                    or has_next_south
+                    or has_down_east
+                ):
                     bottom += wall_char
                 else:
-                    # إذا كانت كل الجدران حول هذه الزاوية مهدومة، نطبع فراغاً لتصبح المساحة نظيفة
+                    # إذا كانت كل الجدران حول هذه الزاوية مهدومة
+                    # نطبع فراغاً لتصبح المساحة نظيفة
                     bottom += " "
 
             print(middle)
             print(bottom)
 
-    def solve_path(self, entry: tuple[int, int], exit: tuple[int, int]) -> list[tuple[int, int]]:
+    def solve_path(
+        self,
+        entry: tuple[int, int],
+        exit: tuple[int, int]
+    ) -> list[tuple[int, int]]:
         self._entry = entry
         self._exit = exit
         queue = deque([entry])
@@ -241,10 +268,10 @@ class Maze:
         parent = {entry: None}
 
         directions = [
-            (0, -1, 1), #N
-            (0, 1, 4), #S
-            (-1, 0, 8), #W
-            (1, 0, 2) #E
+            (0, -1, 1),  # N
+            (0, 1, 4),  # S
+            (-1, 0, 8),  # W
+            (1, 0, 2)  # E
         ]
 
         while queue:
@@ -262,8 +289,11 @@ class Maze:
 
                 nx, ny = x + dx, y + dy
 
-                #حدود المتاهة
-                if nx < 0 or nx >= self._width or ny < 0 or ny >= self._height:
+            # حدود المتاهة
+                if (
+                    nx < 0 or nx >= self._width
+                    or ny < 0 or ny >= self._height
+                ):
                     continue
 
                 if (nx, ny) in visited:
@@ -291,16 +321,18 @@ class Maze:
         self._path = path
         return path
 
-
     def check_terminal_size(self) -> bool:
         """Check if terminal size is enough to display the maze."""
 
         terminal = shutil.get_terminal_size()
 
-        required_width = self._width * 2 + 1
-        required_height = self._height + 2
+        required_width = self._width * 4 + 1
+        required_height = self._height * 2 + 1
 
-        if terminal.columns < required_width or terminal.lines < required_height:
+        if (
+            terminal.columns < required_width
+            or terminal.lines < required_height
+        ):
             return False
 
         return True
