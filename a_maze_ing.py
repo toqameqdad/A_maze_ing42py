@@ -125,6 +125,10 @@ def main() -> None:
         return
     seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
     seed.solve_path(config["ENTRY"], config["EXIT"])
+    if not seed.check_terminal_size():
+        print("Terminal is too small. Please enlarge it.")
+        return
+
     seed.print_maze()
     while True:
         print("=== A-Maze-ing ===\n"
