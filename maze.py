@@ -215,7 +215,19 @@ class Maze:
                     else:
                         bottom += "   "
             # الفاصل بين الخلايا
-                bottom += wall_char
+               # bottom += wall_char
+               # الفاصل بين الخلايا (الزاوية المشتركة)
+                # تكون جداراً فقط إذا كان هناك جدار واحد على الأقل متصل بها
+                has_east = (self._grid[r][c] & 2) != 0
+                has_south = (self._grid[r][c] & 4) != 0
+                has_next_south = (self._grid[r][c + 1] & 4) != 0 if (c + 1 < self._width) else True
+                has_down_east = (self._grid[r + 1][c] & 2) != 0 if (r + 1 < self._height) else True
+
+                if has_east or has_south or has_next_south or has_down_east:
+                    bottom += wall_char
+                else:
+                    # إذا كانت كل الجدران حول هذه الزاوية مهدومة، نطبع فراغاً لتصبح المساحة نظيفة
+                    bottom += " "
 
             print(middle)
             print(bottom)

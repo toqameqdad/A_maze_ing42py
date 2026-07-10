@@ -13,7 +13,7 @@ run:
 	./$(VENV)/bin/$(PYTHON) a_maze_ing.py config.txt
 
 debug:
-	./$(VENV)/bin/$(PYTHON) -m pdb a_maze_ing config.txt
+	./$(VENV)/bin/$(PYTHON) -m pdb a_maze_ing.py config.txt
 
 clean:
 	rm -rf __pycache__

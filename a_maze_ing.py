@@ -20,7 +20,7 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
     """
     required_keys = [
             "WIDTH", "HEIGHT", "ENTRY",
-            "EXIT", "OUTPUT_FILE", "PERFECT"]
+            "EXIT", "OUTPUT_FILE"]
     for key in required_keys:
         if key not in config:
             print(f"Error: Missing required configuration key: '{key}'")
@@ -61,7 +61,7 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
     if not (0 <= exit_x < width and 0 <= exit_y < height):
         print("Error: EXIT is outside maze bounds")
         return False
-
+    
     return True
 
 
@@ -111,8 +111,18 @@ def main() -> None:
     if not validate_config(config):
         return
     seed_value = config.get("SEED", None)
+    perfect = config.get("PERFECT", "False")
     seed = Maze(config["WIDTH"], config["HEIGHT"]
-                , config["PERFECT"], seed_value)
+                , perfect, seed_value)
+    if config["ENTRY"] in seed._pattern_cells:
+        print(f"Error: ENTRY {config['ENTRY']} falls on the '42' pattern! "
+              "This cell is reserved. Please change it in config.txt.")
+        return
+
+    if config["EXIT"] in seed._pattern_cells:
+        print(f"Error: EXIT {config['EXIT']} falls on the '42' pattern! "
+              "This cell is reserved. Please change it in config.txt.")
+        return
     seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
     seed.solve_path(config["ENTRY"], config["EXIT"])
     seed.print_maze()
@@ -122,24 +132,27 @@ def main() -> None:
               "2. Show/Hide path from entry to exit\n"
               "3. Rotate maze colors\n"
               "4. Quit\n")
-        choice = input("Choice? (1-4): ")
-        if choice == "1":
-            seed = Maze(config["WIDTH"], config["HEIGHT"]
-                , config["PERFECT"], seed_value)
-            seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
-            seed.solve_path(config["ENTRY"], config["EXIT"])
-            seed.print_maze()
-        elif choice == "2":
-            seed._show_path = not seed._show_path
-            seed.print_maze()
-        elif choice == "3":
-            seed.rotate_colors()
-            seed.print_maze()
-        elif choice == "4":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice!")
+        try:
+            choice = input("Choice? (1-4): ")
+            if choice == "1":
+                seed = Maze(config["WIDTH"], config["HEIGHT"],
+                            perfect, seed_value)
+                seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
+                seed.solve_path(config["ENTRY"], config["EXIT"])
+                seed.print_maze()
+            elif choice == "2":
+                seed._show_path = not seed._show_path
+                seed.print_maze()
+            elif choice == "3":
+                seed.rotate_colors()
+                seed.print_maze()
+            elif choice == "4":
+                print("Goodbye!")
+                break
+            else:
+                print("Invalid choice!")
+        except (Exception, KeyboardInterrupt):
+            sys.exit(0)
 
 
 
