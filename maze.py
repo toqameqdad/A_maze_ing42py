@@ -1,4 +1,5 @@
 import random
+import shutil
 from collections import deque
 
 
@@ -289,3 +290,17 @@ class Maze:
 
         self._path = path
         return path
+
+
+    def check_terminal_size(self) -> bool:
+        """Check if terminal size is enough to display the maze."""
+
+        terminal = shutil.get_terminal_size()
+
+        required_width = self._width * 2 + 1
+        required_height = self._height + 2
+
+        if terminal.columns < required_width or terminal.lines < required_height:
+            return False
+
+        return True
