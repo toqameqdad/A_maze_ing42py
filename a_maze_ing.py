@@ -1,5 +1,5 @@
 import sys
-from typing import TypeAlias
+from typing import TypeAlias, cast
 from pathlib import Path
 from maze import Maze
 
@@ -29,7 +29,6 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
     height = config["HEIGHT"]
     entry = config["ENTRY"]
     exit_ = config["EXIT"]
-    output_file = config["OUTPUT_FILE"]
 
     if not isinstance(width, int) or not isinstance(height, int):
         print("Error: WIDTH and HEIGHT must be integers")
@@ -66,6 +65,15 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
 
 
 def main() -> None:
+    """Main execution function to load config, generate, solve, and interact with the maze.
+
+    Parses the configuration file provided via command-line arguments, validates
+    its structure, initializes the maze object, handles special pattern checks,
+    and opens an interactive terminal menu for the user.
+
+    Raises:
+        SystemExit: If an unhandled exception or KeyboardInterrupt occurs.
+    """
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         return
@@ -110,26 +118,31 @@ def main() -> None:
                 return
     if not validate_config(config):
         return
-    seed_value = config.get("SEED", None)
-    perfect = config.get("PERFECT", "False")
-    seed = Maze(config["WIDTH"], config["HEIGHT"],
-                perfect, seed_value)
-    if config["ENTRY"] in seed._pattern_cells:
-        print(f"Error: ENTRY {config['ENTRY']} falls on the '42' pattern! "
+    width = cast(int, config["WIDTH"])
+    height = cast(int, config["HEIGHT"])
+    entry = cast(tuple[int, int], config["ENTRY"])
+    exit_ = cast(tuple[int, int], config["EXIT"])
+    output_file = cast(str, config["OUTPUT_FILE"])
+    seed_value = cast(int | None, config.get("SEED", None))
+    perfect = cast(bool, config.get("PERFECT", False))
+
+    seed = Maze(width, height, perfect, entry, exit_, seed_value)
+    if entry in seed._pattern_cells:
+        print(f"Error: ENTRY {entry} falls on the '42' pattern! "
               "This cell is reserved. Please change it in config.txt.")
         return
 
-    if config["EXIT"] in seed._pattern_cells:
-        print(f"Error: EXIT {config['EXIT']} falls on the '42' pattern! "
+    if exit_ in seed._pattern_cells:
+        print(f"Error: EXIT {exit_} falls on the '42' pattern! "
               "This cell is reserved. Please change it in config.txt.")
         return
-    seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
-    seed.solve_path(config["ENTRY"], config["EXIT"])
+    seed.generate_maze(entry[0], entry[1])
+    seed.solve_path(entry, exit_)
     if not seed.check_terminal_size():
         print("Terminal is too small. Please enlarge it.")
         return
-
     seed.print_maze()
+    seed.save_to_file(output_file)
     while True:
         print("=== A-Maze-ing ===\n"
               "1. Re-generate a new maze\n"
@@ -139,11 +152,14 @@ def main() -> None:
         try:
             choice = input("Choice? (1-4): ")
             if choice == "1":
-                seed = Maze(config["WIDTH"], config["HEIGHT"],
-                            perfect, seed_value)
-                seed.generate_maze(config["ENTRY"][0], config["ENTRY"][1])
-                seed.solve_path(config["ENTRY"], config["EXIT"])
+                seed = Maze(width, height, perfect, entry, exit_, seed_value)
+                seed.generate_maze(entry[0], entry[1])
+                seed.solve_path(entry, exit_)
+                if not seed.check_terminal_size():
+                    print("Terminal is too small. Please enlarge it.")
+                    return
                 seed.print_maze()
+                seed.save_to_file(output_file)
             elif choice == "2":
                 seed._show_path = not seed._show_path
                 seed.print_maze()
