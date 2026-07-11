@@ -1,7 +1,7 @@
 import sys
 from typing import TypeAlias, cast
 from pathlib import Path
-from maze import Maze
+from mazegen.maze import Maze
 
 ConfigValue: TypeAlias = int | str | bool | tuple[int, int]
 
@@ -65,9 +65,11 @@ def validate_config(config: dict[str, ConfigValue]) -> bool:
 
 
 def main() -> None:
-    """Main execution function to load config, generate, solve, and interact with the maze.
+    """Main execution function to load config,
+    generate, solve, and interact with the maze.
 
-    Parses the configuration file provided via command-line arguments, validates
+    Parses the configuration file provided via
+    command-line arguments, validates
     its structure, initializes the maze object, handles special pattern checks,
     and opens an interactive terminal menu for the user.
 
