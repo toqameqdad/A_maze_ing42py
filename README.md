@@ -22,13 +22,14 @@ the activity environment clean.
 ## Additional
 - The complete format of config file : KEY=VALUE
 for example:
-WIDTH=20                    # Maze width (number of cells)
-HEIGHT=15                   # Maze height
-ENTRY=0,0                   # Entry coordinates (x,y)
-EXIT=19,14                  # Exit coordinates (x,y)
-OUTPUT_FILE=maze.txt        # Output filename
-PERFECT = True              # Is the maze perfect?
-
+```text
+WIDTH=20                    # Maze width (number of cells)  
+HEIGHT=15                   # Maze height  
+ENTRY=0,0                   # Entry coordinates (x,y)  
+EXIT=19,14                  # Exit coordinates (x,y)  
+OUTPUT_FILE=maze.txt        # Output filename  
+PERFECT = True              # Is the maze perfect?  
+```
 - The maze generation algorithm we chose:
 (Depth-First Search) to generate the maze
 - Why DFS for Maze Generation?
