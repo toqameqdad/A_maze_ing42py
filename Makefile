@@ -7,7 +7,7 @@ PIP = pip
 install:
 	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/$(PIP) install --upgrade pip
-	$(VENV)/bin/$(PIP) install flake8 mypy pytest
+	$(VENV)/bin/$(PIP) install flake8 mypy
 
 run:
 	./$(VENV)/bin/$(PYTHON) a_maze_ing.py config.txt

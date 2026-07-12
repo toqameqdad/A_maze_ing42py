@@ -29,6 +29,22 @@ class Maze:
     def __init__(self, width: int, height: int, perfect: bool,
                  _entry: tuple[int, int], _exit: tuple[int, int],
                  seed: int | None):
+        """Initializes the maze generator with grid dimensions,
+        styles, and a central pattern.
+
+        Sets up the initial closed grid, configures the random seed,
+        and embeds
+        a predefined 5x7 pattern in the center of the maze
+        if space permits.
+
+        Args:
+            width (int): Number of columns in the maze grid.
+            height (int): Number of rows in the maze grid.
+            perfect (bool): If True, generates a maze with no loops/cycles.
+            _entry (tuple[int, int]): Starting coordinates (x, y)
+            _exit (tuple[int, int]): Ending coordinates (x, y)
+            seed (int | None): Seed value for reproducible random generation.
+        """
         self._width = width
         self._height = height
         self._perfect = perfect
@@ -79,6 +95,24 @@ class Maze:
 
     def _get_unvisited_neighbors(self, x: int, y: int) -> list[
             tuple[int, int, str]]:
+        """Finds all valid, unvisited neighboring cells
+        around a given coordinate.
+
+        Checks the four cardinal directions
+        (North, South, East, West) to ensure
+        potential neighbors are within bounds
+        and have not been visited yet.
+
+        Args:
+            x (int): The X-coordinate (column) of the current cell.
+            y (int): The Y-coordinate (row) of the current cell.
+
+        Returns:
+            list[tuple[int, int, str]]: A list of tuples,
+            where each tuple contains the neighbor's X-coordinate,
+            Y-coordinate, and the direction character
+                ('N', 'S', 'E', or 'W').
+        """
         neighbors = []
         next_y = y - 1
         if next_y >= 0 and not self._visited[next_y][x]:
@@ -95,6 +129,18 @@ class Maze:
         return neighbors
 
     def generate_maze(self, start_x: int, start_y: int) -> None:
+        """Generates a maze using the randomized
+        depth-first search algorithm.
+
+        Carves paths starting from the given coordinates and
+        optionally breaks
+        additional walls to introduce loops if
+        a non-perfect maze is requested.
+
+        Args:
+            start_x (int): The starting X-coordinate (column)
+            start_y (int): The starting Y-coordinate (row)
+        """
         self._grid = []
         for row in range(self._height):
             current_row = []
@@ -152,6 +198,22 @@ class Maze:
                                 self._grid[row][colomn + 1] += 8
 
     def _is_3x3(self, row: int, colomn: int) -> bool:
+        """Checks if a 3x3 block of cells starting
+        from the given coordinates is entirely open.
+
+        Ensures there are no inner horizontal or
+        vertical walls within the 3x3 region,
+        which would otherwise create an open 3x3
+        room/square inside the maze.
+
+        Args:
+            row (int): The starting row index of the 3x3 block.
+            colomn (int): The starting column index of the 3x3 block.
+
+        Returns:
+            bool: True if the 3x3 region is completely
+            open (wall-free), False otherwise.
+        """
         if self._height <= 3 or self._width <= 3:
             return False
         if row + 2 >= self._height or colomn + 2 >= self._width:
@@ -167,6 +229,12 @@ class Maze:
         return True
 
     def rotate_colors(self) -> None:
+        """Randomly changes the colors of the maze components.
+
+        Selects random ANSI color codes from a predefined
+        list to update the colors of the walls, central pattern,
+        and solution path.
+        """
         colors = ["47", "41", "42", "43", "44", "45",
                   "46", "47", "100", "101", "102",
                   "103", "104", "105", "106"]
@@ -175,11 +243,22 @@ class Maze:
         self.path_color = random.choice(colors)
 
     def print_maze(self) -> None:
+        """Renders the maze in the console using
+        ANSI escape color codes.
+
+        Draws the top boundary, then loops through each cell
+        to build and print the middle (cell content and east walls)
+        and bottom (south walls and corners) sections.
+        Displays a warning if the maze is too small
+        for the central pattern.
+        """
         WALL = f"\033[{self.wall_color}m \033[0m"
         PATH = f"\033[{self.path_color}m   \033[0m"
         ENTRY = "\033[45m   \033[0m"
         EXIT = "\033[41m   \033[0m"
 
+        if self._width <= 7 or self._height <= 5:
+            print("Maze too small to display the 42 pattern.")
         top = WALL
         for _ in range(self._width):
             top += WALL * 3 + WALL
@@ -260,8 +339,22 @@ class Maze:
 
     def solve_path(self, entry: tuple[int, int],
                    exit: tuple[int, int]) -> list[tuple[int, int]]:
-        self._entry = entry
-        self._exit = exit
+        """Solves the maze from entry to exit using
+        the Breadth-First Search (BFS) algorithm.
+
+        Finds the shortest path by exploring unvisited
+        open neighbors, tracking their parent cells,
+        and backtracking from the exit to reconstruct the final path.
+
+        Args:
+            entry (tuple[int, int]): The starting coordinates (x, y)
+            exit (tuple[int, int]): The ending coordinates (x, y)
+
+        Returns:
+            list[tuple[int, int]]: A list of coordinates
+            representing the path from entry to exit,
+                or an empty list if no solution is found.
+        """
         queue = deque([entry])
         visited = set([entry])
         parent: dict[tuple[int, int], tuple[int, int] | None] = {entry: None}
@@ -314,6 +407,23 @@ class Maze:
         return path
 
     def save_to_file(self, file_name: str) -> None:
+        """Saves the maze grid layout and
+        its solution path to a text file.
+
+        The file is formatted as follows:
+        1. The maze grid layout,
+        where each cell is represented by its hexadecimal value.
+        2. A blank line.
+        3. The entry coordinates formatted as 'x,y'.
+        4. The exit coordinates formatted as 'x,y'.
+        5. The solution path represented as a sequence
+        of directional characters
+           ('N' for North, 'S' for South, 'E' for East, 'W' for West).
+
+        Args:
+            file_name (str): The path or name of the file
+            where the maze data will be saved.
+        """
         with open(file_name, "w", encoding="utf-8") as file:
             for r in range(self._height):
                 row = ""
@@ -347,10 +457,8 @@ class Maze:
         """Check if terminal size is enough to display the maze."""
 
         terminal = shutil.get_terminal_size()
-
-        required_width = self._width * 2 + 1
+        required_width = self._width * 4 + 1
         required_height = self._height + 2
-
         if (
                 terminal.columns < required_width or
                 terminal.lines < required_height):
