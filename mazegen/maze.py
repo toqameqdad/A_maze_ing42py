@@ -82,8 +82,8 @@ class Maze:
         ]
         self._pattern_cells = set()
         if self._width > 7 and self._height > 5:
-            start_x = (self._width - 7) // 2
-            start_y = (self._height - 5) // 2
+            start_x = (self._width - 6) // 2
+            start_y = (self._height - 4) // 2
             for r in range(5):
                 for c in range(7):
                     if pattern[r][c] == 1:
@@ -183,19 +183,7 @@ class Maze:
             else:
                 stack.pop()
         if not self._perfect:
-            for row in range(self._height):
-                for colomn in range(self._width):
-                    if random.random() <= 0.2 and (colomn + 1) < self._width:
-                        if (
-                                (self._grid[row][colomn] & 2) != 0
-                                and (self._grid[row][colomn + 1] & 8) != 0
-                                and self._grid[row][colomn + 1] != 15
-                                and self._grid[row][colomn] != 15):
-                            self._grid[row][colomn] -= 2
-                            self._grid[row][colomn + 1] -= 8
-                            if self._is_3x3(row, colomn):
-                                self._grid[row][colomn] += 2
-                                self._grid[row][colomn + 1] += 8
+            self.make_imperfect()
 
     def _is_3x3(self, row: int, colomn: int) -> bool:
         """Checks if a 3x3 block of cells starting
@@ -465,3 +453,81 @@ class Maze:
             return False
 
         return True
+
+    def make_imperfect(self):
+        for row in range(self._height):
+            for col in range(self._width):
+
+                # تجاهل خلايا 42 المغلقة
+                if self._grid[row][col] == 15:
+                    continue
+
+                cell = self._grid[row][col]
+
+                open_count = 0
+                if (cell & 1) == 0:
+                    open_count += 1
+                if (cell & 2) == 0:
+                    open_count += 1
+                if (cell & 4) == 0:
+                    open_count += 1
+                if (cell & 8) == 0:
+                    open_count += 1
+
+                # ليست dead-end
+                if open_count != 1:
+                    continue
+
+                directions = []
+
+                if row > 0 and (cell & 1):
+                    directions.append("N")
+                if col < self._width - 1 and (cell & 2):
+                    directions.append("E")
+                if row < self._height - 1 and (cell & 4):
+                    directions.append("S")
+                if col > 0 and (cell & 8):
+                    directions.append("W")
+
+                random.shuffle(directions)
+
+                for d in directions:
+                    if d == "N":
+                        self._grid[row][col] &= ~1
+                        self._grid[row - 1][col] &= ~4
+
+                        if self._is_3x3(row, col):
+                            self._grid[row][col] |= 1
+                            self._grid[row - 1][col] |= 4
+                        else:
+                            break
+
+                    elif d == "E":
+                        self._grid[row][col] &= ~2
+                        self._grid[row][col + 1] &= ~8
+
+                        if self._is_3x3(row, col):
+                            self._grid[row][col] |= 2
+                            self._grid[row][col + 1] |= 8
+                        else:
+                            break
+
+                    elif d == "S":
+                        self._grid[row][col] &= ~4
+                        self._grid[row + 1][col] &= ~1
+
+                        if self._is_3x3(row, col):
+                            self._grid[row][col] |= 4
+                            self._grid[row + 1][col] |= 1
+                        else:
+                            break
+
+                    elif d == "W":
+                        self._grid[row][col] &= ~8
+                        self._grid[row][col - 1] &= ~2
+
+                        if self._is_3x3(row, col):
+                            self._grid[row][col] |= 8
+                            self._grid[row][col - 1] |= 2
+                        else:
+                            break
